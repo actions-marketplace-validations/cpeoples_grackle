@@ -44,18 +44,23 @@ apps:
 
 parts:
   rust-deps:
-    # snapcraft 9 stopped auto-provisioning the Rust toolchain, so the rust
-    # plugin now requires rustup on PATH or a part named rust-deps to supply it.
+    # snapcraft 9's rust plugin no longer provisions rustup itself. Install it
+    # to the default $HOME/.cargo, which is the location the plugin puts on PATH
+    # for the build step. The grackle part sets rust-channel: none so the plugin
+    # uses this toolchain instead of trying to drive rustup during pull.
     plugin: nil
     build-packages:
       - curl
-    override-pull: |
-      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    override-build: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --default-toolchain stable --profile minimal
+      craftctl default
 
   grackle:
     plugin: rust
     source: .
     after: [rust-deps]
+    rust-channel: none
     # The workflow stamps the tag into snap/.version; core24 has no git in the
     # build environment for craftctl to resolve it on its own.
     override-build: |
