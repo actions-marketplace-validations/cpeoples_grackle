@@ -43,9 +43,19 @@ apps:
       - removable-media
 
 parts:
+  rust-deps:
+    # snapcraft 9 stopped auto-provisioning the Rust toolchain, so the rust
+    # plugin now requires rustup on PATH or a part named rust-deps to supply it.
+    plugin: nil
+    build-packages:
+      - curl
+    override-pull: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+
   grackle:
     plugin: rust
     source: .
+    after: [rust-deps]
     # The workflow stamps the tag into snap/.version; core24 has no git in the
     # build environment for craftctl to resolve it on its own.
     override-build: |
